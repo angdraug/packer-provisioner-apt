@@ -1,0 +1,20 @@
+{
+  "variables": {
+    "machine": "base-{{strftime `%Y%m%d`}}-{{uuid}}"
+  },
+  "builders": [
+    {
+      "type": "nspawn-debootstrap",
+      "variant": "minbase",
+      "name": "{{user `machine`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "apt",
+      "packages": ["less", "vim-tiny"],
+      "sources": ["deb http://security.debian.org/debian-security buster/updates main contrib"],
+      "keys": ["/etc/apt/trusted.gpg.d/debian-archive-buster-security-automatic.gpg"]
+    }
+  ]
+}

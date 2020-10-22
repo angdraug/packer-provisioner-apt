@@ -1,0 +1,27 @@
+image: debian/sid
+packages:
+  - golang-go
+  - debootstrap
+  - libglib2.0-bin
+  - systemd-container
+sources:
+  - https://git.sr.ht/~angdraug/packer-builder-nspawn-debootstrap
+  - https://git.sr.ht/~angdraug/packer-provisioner-apt
+environment:
+  builder: packer-builder-nspawn-debootstrap
+  provisioner: packer-provisioner-apt
+tasks:
+  # packer recommends docker.io, that mucks up network in build VM
+  - setup_packer: |
+      sudo apt-get --no-install-recommends --yes install packer
+  - binary: |
+      cd ~/${builder}
+      go build
+      ln -s ~/${builder}/${builder} ~/${provisioner}/
+      cd ~/${provisioner}
+      go build
+  - machine: |
+      cd ${provisioner}
+      sudo systemctl start systemd-networkd.service
+      sudo systemctl start systemd-resolved.service
+      sudo packer build unstable-minbase.json
