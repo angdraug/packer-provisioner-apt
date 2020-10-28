@@ -20,7 +20,7 @@ Prerequisites:
 - `packer` (use `--no-install-recommends` to prevent the Debian package of
   Packer from also installing Docker when you don't need it)
 - (optional)
-  [packer-builder-nspawn-debootstrap](https://git.sr.ht/~angdraug/packer-builder-nspawn-debootstrap/)
+  [packer-builder-nspawn](https://git.sr.ht/~angdraug/packer-builder-nspawn)
   to build Debian container images with systemd-nspawn
 
 For compatibility with the Debian package of Packer that is built with a newer
@@ -45,9 +45,10 @@ built from unpatched upstream source, comment out that replace line.
   [apt-secure(8)](https://manpages.debian.org/unstable/apt/apt-secure.8.en.html).
 
 - `cache_dir` - local APT cache directory. The default is
-  `/var/cache/apt/archives`. The contents will be copied into the image under
-  `/var/cache/apt/archives` before running `apt-get install`, and will be
-  purged from the image with `apt-get clean` afterwards.
+  `/var/cache/apt/archives`. The directory will be copied into the target under
+  `/var/cache/apt/archives` before running `apt-get install`. After
+  provisioning, the directory will be updated with packages from the target
+  cache, and the target cache will be purged with `apt-get clean`.
 
 When building multiple images with the same or overlapping set of packages, you
 can pre-populate APT cache before running packer:

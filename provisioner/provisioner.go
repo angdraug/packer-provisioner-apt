@@ -3,7 +3,9 @@ package provisioner
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -75,10 +77,31 @@ func (p *Provisioner) Provision(ctx context.Context, ui packer.Ui, comm packer.C
 		return err
 	}
 
+	p.updateCache(ui, comm)
+
 	cmd = &packer.RemoteCmd{Command: "/usr/bin/apt-get clean"}
 	if err := cmd.RunWithUi(ctx, comm, ui); err != nil {
 		ui.Error("apt-get clean failed, ignoring")
 	}
 
 	return nil
+}
+
+func (p *Provisioner) updateCache(ui packer.Ui, comm packer.Communicator) {
+	dir, err := ioutil.TempDir(os.TempDir(), "archives-")
+	if err != nil {
+		ui.Error("APT cache update: failed to create tempdir")
+		return
+	}
+	defer os.RemoveAll(dir)
+
+	if err := comm.DownloadDir("/var/cache/apt/archives", dir, []string{}); err != nil {
+		ui.Error(fmt.Sprintf("APT cache update: failed to download archives to %s", dir))
+		return
+	}
+
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("mv -n %s/*.deb %s", dir, p.config.CacheDir))
+	if err := cmd.Run(); err != nil {
+		ui.Error(fmt.Sprintf("APT cache update: mv: %v", err))
+	}
 }
