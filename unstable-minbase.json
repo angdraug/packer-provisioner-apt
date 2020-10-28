@@ -4,7 +4,7 @@
   },
   "builders": [
     {
-      "type": "nspawn-debootstrap",
+      "type": "nspawn",
       "variant": "minbase",
       "name": "{{user `machine`}}"
     }
