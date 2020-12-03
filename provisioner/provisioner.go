@@ -33,6 +33,16 @@ func (p *Provisioner) Provision(ctx context.Context, ui packer.Ui, comm packer.C
 		return err
 	}
 
+	cmd := &packer.RemoteCmd{
+		Command: "/bin/sh -c 'for i in $(seq 100); do " +
+			"resolvectl query deb.debian.org >/dev/null && break; sleep 0.1; done; " +
+			"resolvectl query deb.debian.org'",
+	}
+	if err := cmd.RunWithUi(ctx, comm, ui); err != nil {
+		ui.Error("Failed waiting for domain name resolution")
+		return err
+	}
+
 	for _, key := range p.config.Keys {
 		f, err := os.Open(key)
 		if err != nil {
@@ -45,7 +55,7 @@ func (p *Provisioner) Provision(ctx context.Context, ui packer.Ui, comm packer.C
 			return err
 		}
 
-		err = comm.Upload("/etc/apt/trusted.gpg.d/" + filepath.Base(key), f, &fi)
+		err = comm.Upload("/etc/apt/trusted.gpg.d/"+filepath.Base(key), f, &fi)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Failed to upload APT key %s", key))
 			return err
@@ -66,7 +76,7 @@ func (p *Provisioner) Provision(ctx context.Context, ui packer.Ui, comm packer.C
 		}
 	}
 
-	cmd := &packer.RemoteCmd{
+	cmd = &packer.RemoteCmd{
 		Command: fmt.Sprintf(
 			"DEBIAN_FRONTEND=noninteractive /usr/bin/apt-get install -y --no-install-recommends %s",
 			strings.Join(p.config.Packages, " "),
