@@ -2,7 +2,7 @@ package main
 
 import (
 	"git.sr.ht/~angdraug/packer-provisioner-apt/provisioner"
-	"github.com/hashicorp/packer/packer/plugin"
+	"github.com/hashicorp/packer-plugin-sdk/plugin"
 )
 
 func main() {
